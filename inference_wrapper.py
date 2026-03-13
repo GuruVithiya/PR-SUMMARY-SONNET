@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 import httpx
@@ -10,22 +11,18 @@ MAX_RETRIES = 3
 
 BEDROCK_URL = (
     f"https://bedrock-runtime.{BEDROCK_REGION}.amazonaws.com"
-    f"/model/{MODEL_ID}/converse"
+    f"/model/{MODEL_ID}/invoke"
 )
 
 
 def call_claude(system: str, messages: list) -> str:
     api_key = os.environ["BEDROCK_API_KEY"]
 
-    bedrock_messages = [
-        {"role": m["role"], "content": [{"text": m["content"]}]}
-        for m in messages
-    ]
-
     payload = {
-        "system": [{"text": system}],
-        "messages": bedrock_messages,
-        "inferenceConfig": {"maxTokens": MAX_TOKENS},
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": MAX_TOKENS,
+        "system": system,
+        "messages": messages,
     }
 
     headers = {
@@ -40,12 +37,13 @@ def call_claude(system: str, messages: list) -> str:
             if attempt == MAX_RETRIES - 1:
                 response.raise_for_status()
             wait = 2 ** attempt
-            print(f"Rate limited. Retrying in {wait}s...")
+            print(f"Rate limited. Retrying in {wait}s...", file=sys.stderr)
             time.sleep(wait)
             continue
 
         if not response.is_success:
-            print(f"Bedrock error {response.status_code}: {response.text}")
+            print(f"Bedrock error {response.status_code}: {response.text}", file=sys.stderr)
             response.raise_for_status()
+
         data = response.json()
-        return data["output"]["message"]["content"][0]["text"]
+        return data["content"][0]["text"]
