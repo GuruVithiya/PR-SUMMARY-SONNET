@@ -4,7 +4,7 @@ import time
 import httpx
 
 BEDROCK_REGION = "us-east-1"
-MODEL_ID = "us.anthropic.claude-sonnet-4-5-20251001-v2:0"
+MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 MAX_TOKENS = 2048
 MAX_RETRIES = 3
 
@@ -44,6 +44,8 @@ def call_claude(system: str, messages: list) -> str:
             time.sleep(wait)
             continue
 
-        response.raise_for_status()
+        if not response.is_success:
+            print(f"Bedrock error {response.status_code}: {response.text}")
+            response.raise_for_status()
         data = response.json()
         return data["output"]["message"]["content"][0]["text"]
