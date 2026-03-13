@@ -23,7 +23,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip uninstall anthropic -y || true
+          pip install --no-cache-dir -r requirements.txt
 
       - name: Generate diff
         run: |
