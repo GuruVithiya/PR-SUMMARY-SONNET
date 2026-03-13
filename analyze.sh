@@ -14,6 +14,7 @@ if [ ! -s diff.txt ]; then
 fi
 
 # Run analysis
+BEDROCK_API_KEY="$BEDROCK_API_KEY" \
 PR_TITLE="$CI_MERGE_REQUEST_TITLE" \
 PR_DESCRIPTION="$CI_MERGE_REQUEST_DESCRIPTION" \
 python main.py --diff-file diff.txt > analysis.json
